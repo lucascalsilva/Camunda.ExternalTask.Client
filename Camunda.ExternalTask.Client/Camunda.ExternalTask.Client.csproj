@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <!--<GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>-->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.1</Version>
+    <Product>Camunda External Task Client API</Product>
+    <Title>Camunda External Task Client API</Title>
+    <Authors>Lucas da Silva</Authors>
+    <PackageProjectUrl>https://github.com/lucascalsilva/Camunda.ExternalTask.Client</PackageProjectUrl>
+    <!--<PackageIconUrl></PackageIconUrl>-->
+    <Description>Camunda External Task Client API for .NET platform</Description>
+    <PackageTags>camunda rest refit bpmn bpm external task</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <RepositoryType></RepositoryType>
+    <!--<PackageLicenseFile>LICENSE</PackageLicenseFile>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Camunda.Api.Client" Version="2.4.4" />
+  </ItemGroup>
+
+</Project>

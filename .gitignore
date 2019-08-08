@@ -1,0 +1,6 @@
+# Idea files
+.vscode/
+
+# Build results
+[Bb]in/
+[Oo]bj/
