@@ -1,5 +1,4 @@
 ﻿using System;
-using Camunda.ExternalTask.Client;
 
 namespace Camunda.ExternalTask.Client.Example
 {
@@ -7,7 +6,8 @@ namespace Camunda.ExternalTask.Client.Example
     {
         static void Main(string[] args)
         {
-            ExternalTaskClient externalTaskClient = new ExternalTaskClient();
+            IExternalTaskClient externalTaskClient = ExternalTaskClientBuilder.Create()
+                .WorkerId("DOT-NET-WORKER").Build();
             externalTaskClient.Startup();
             Console.ReadLine();
             externalTaskClient.Shutdown();

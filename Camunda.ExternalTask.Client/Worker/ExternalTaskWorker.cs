@@ -10,17 +10,14 @@ namespace Camunda.ExternalTask.Client.Worker
 {
 	public class ExternalTaskWorker : IDisposable
 	{
+		private ExternalTaskClient client;
 		private Timer taskQueryTimer;
-		private long pollingIntervalInMilliseconds = 50; // every 50 milliseconds
-		private int maxDegreeOfParallelism = 2;
-		private long lockDurationInMilliseconds = 1 * 60 * 1000;
-
-		private int maxTasks = 10; // 1 minute
 		private ExternalTaskService externalTaskService;
 		private ExternalTaskWorkerInfo taskWorkerInfo;
 
-		public ExternalTaskWorker(ExternalTaskService externalTaskService, ExternalTaskWorkerInfo taskWorkerInfo)
+		public ExternalTaskWorker(ExternalTaskClient client, ExternalTaskService externalTaskService, ExternalTaskWorkerInfo taskWorkerInfo)
 		{
+			this.client = client;
 			this.externalTaskService = externalTaskService;
 			this.taskWorkerInfo = taskWorkerInfo;
 		}
@@ -31,11 +28,11 @@ namespace Camunda.ExternalTask.Client.Worker
 			{
 				var fetchExternalTasks = new FetchExternalTasks()
 				{
-					WorkerId = taskWorkerInfo.WorkerId,
-					MaxTasks = maxTasks,
+					WorkerId = client.WorkerId,
+					MaxTasks = client.MaxTasks,
 					Topics = new List<FetchExternalTaskTopic>(){
-					new FetchExternalTaskTopic(taskWorkerInfo.TopicName, lockDurationInMilliseconds){
-						Variables = taskWorkerInfo.VariablesToFetch
+					new FetchExternalTaskTopic(taskWorkerInfo.TopicName, client.LockDurationInMilliseconds){
+						Variables = taskWorkerInfo.VariablesToFetch.Count > 0 ? taskWorkerInfo.VariablesToFetch : null
 						}
 					}
 				};
@@ -44,7 +41,7 @@ namespace Camunda.ExternalTask.Client.Worker
 				// run them in parallel with a max degree of parallelism
 				Parallel.ForEach(
 					tasks,
-					new ParallelOptions { MaxDegreeOfParallelism = this.maxDegreeOfParallelism },
+					new ParallelOptions { MaxDegreeOfParallelism = client.MaxDegreeOfParallelism },
 					externalTask => Execute(externalTask)
 				);
 			}
@@ -71,7 +68,7 @@ namespace Camunda.ExternalTask.Client.Worker
 				Console.WriteLine($"...finished External Task {lockedExternalTask.Id}");
 				var completeExternalTask = new CompleteExternalTask()
 				{
-					WorkerId = taskWorkerInfo.WorkerId,
+					WorkerId = client.WorkerId,
 					Variables = resultVariables
 				};
 				externalTaskService.Complete(lockedExternalTask.Id, completeExternalTask);
@@ -81,7 +78,7 @@ namespace Camunda.ExternalTask.Client.Worker
 				Console.WriteLine($"...failed with business error code from External Task  {lockedExternalTask.Id}");
 				var externalTaskBpmnError = new ExternalTaskBpmnError
 				{
-					WorkerId = taskWorkerInfo.WorkerId,
+					WorkerId = client.WorkerId,
 					ErrorCode = ex.BusinessErrorCode,
 					ErrorMessage = ex.Message
 				};
@@ -96,7 +93,7 @@ namespace Camunda.ExternalTask.Client.Worker
 					retriesLeft = lockedExternalTask.Retries.Value - 1;
 				}
 				var externalTaskFailure = new ExternalTaskFailure(){
-					WorkerId = taskWorkerInfo.WorkerId,
+					WorkerId = client.WorkerId,
 					Retries = retriesLeft,
 					ErrorMessage = ex.Message,
 					ErrorDetails = ex.StackTrace
@@ -106,7 +103,7 @@ namespace Camunda.ExternalTask.Client.Worker
 		}
 		public void StartWork()
 		{
-			this.taskQueryTimer = new Timer(_ => DoPolling(), null, pollingIntervalInMilliseconds, Timeout.Infinite);
+			this.taskQueryTimer = new Timer(_ => DoPolling(), null, client.PollingIntervalInMilliseconds, Timeout.Infinite);
 		}
 		public void StopWork()
 		{

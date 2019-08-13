@@ -2,6 +2,7 @@
 
 namespace Camunda.ExternalTask.Client.Worker
 {
+    [Serializable]
     public class UnrecoverableBusinessErrorException : Exception
     {
         public string BusinessErrorCode { get; set; }
