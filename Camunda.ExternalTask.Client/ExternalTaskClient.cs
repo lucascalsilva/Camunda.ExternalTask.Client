@@ -13,6 +13,8 @@ namespace Camunda.ExternalTask.Client
 
     public class ExternalTaskClient : IExternalTaskClient
     {
+        public ExternalTaskClient(){}
+        
         public string WorkerId { get; set; }
         public int MaxTasks { get ; set; }
         public long PollingIntervalInMilliseconds { get ; set; }

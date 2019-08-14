@@ -57,7 +57,7 @@ namespace Camunda.ExternalTask.Client.Worker
 				taskQueryTimer.Change(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(Timeout.Infinite));
 			}
 		}
-		private void Execute(LockedExternalTask lockedExternalTask)
+		public void Execute(LockedExternalTask lockedExternalTask)
 		{
 			var resultVariables = new Dictionary<string, VariableValue>();
 

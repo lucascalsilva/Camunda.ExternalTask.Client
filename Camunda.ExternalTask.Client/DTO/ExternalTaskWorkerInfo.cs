@@ -6,6 +6,8 @@ namespace Camunda.ExternalTask.Client.DTO
 {
     public class ExternalTaskWorkerInfo
     {
+        public ExternalTaskWorkerInfo(){}
+        
         public int Retries { get; set; }
         public long RetryTimeout { get; set; }
         public Type Type { get; set; }
