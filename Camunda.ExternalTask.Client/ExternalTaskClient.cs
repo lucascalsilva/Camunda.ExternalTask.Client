@@ -15,25 +15,25 @@ namespace Camunda.ExternalTask.Client
     {
         public ExternalTaskClient(){}
         
-        public string WorkerId { get; set; }
-        public int MaxTasks { get ; set; }
-        public long PollingIntervalInMilliseconds { get ; set; }
-		public int MaxDegreeOfParallelism { get ; set; }
-		public long LockDurationInMilliseconds { get ; set; }
-        public CamundaClient CamundaClient { get; set; }
+        public virtual string WorkerId { get; set; }
+        public virtual int MaxTasks { get ; set; }
+        public virtual long PollingIntervalInMilliseconds { get ; set; }
+		public virtual int MaxDegreeOfParallelism { get ; set; }
+		public virtual long LockDurationInMilliseconds { get ; set; }
+        public virtual CamundaClient CamundaClient { get; set; }
         private IList<ExternalTaskWorker> workers = new List<ExternalTaskWorker>();
 
-        public void Startup()
+        public virtual void Startup()
         {
             this.StartWorkers();
         }
 
-        public void Shutdown()
+        public virtual void Shutdown()
         {
             this.StopWorkers();
         }
 
-        public void StartWorkers()
+        public virtual void StartWorkers()
         {
             var assembly = Assembly.GetEntryAssembly();
             var externalTaskWorkers = RetrieveExternalTaskWorkerInfo(assembly);
@@ -47,7 +47,7 @@ namespace Camunda.ExternalTask.Client
             }
         }
 
-        public void StopWorkers()
+        public virtual void StopWorkers()
         {
             foreach (ExternalTaskWorker worker in workers)
             {

@@ -24,7 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Camunda.Api.Client" Version="2.4.5-dev" />
+    <PackageReference Include="Camunda.Api.Client" Version="2.4.6-dev" />
   </ItemGroup>
 
 </Project>
