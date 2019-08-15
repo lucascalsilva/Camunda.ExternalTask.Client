@@ -6,11 +6,13 @@ namespace Camunda.ExternalTask.Client.TopicManager
 {
     public class ExternalTaskTopicManagerInfo
     {
-        public int Retries { get; set; }
-        public long RetryTimeout { get; set; }
-        public Type Type { get; set; }
-        public string TopicName { get; set; }
-        public List<string> VariablesToFetch { get; set; } = null;
-        public IExternalTaskAdapter TaskAdapter { get; set; }
+        public ExternalTaskTopicManagerInfo(){}
+        
+        public virtual int Retries { get; set; }
+        public virtual long RetryTimeout { get; set; }
+        public virtual Type Type { get; set; }
+        public virtual string TopicName { get; set; }
+        public virtual List<string> VariablesToFetch { get; set; } = null;
+        public virtual IExternalTaskAdapter TaskAdapter { get; set; }
     }
 }

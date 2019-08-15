@@ -61,7 +61,7 @@ namespace Camunda.ExternalTask.Client.TopicManager
 				}
 			}
 		}
-		private void Execute(LockedExternalTask lockedExternalTask)
+		public virtual void Execute(LockedExternalTask lockedExternalTask)
 		{
 			var resultVariables = new Dictionary<string, VariableValue>();
 

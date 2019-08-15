@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Camunda.Api.Client" Version="2.4.4" />
+    <PackageReference Include="Camunda.Api.Client" Version="2.4.6-dev" />
     <PackageReference Include="Polly" Version="7.1.0" />
   </ItemGroup>
 
