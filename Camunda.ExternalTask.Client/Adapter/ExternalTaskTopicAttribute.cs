@@ -1,4 +1,4 @@
-﻿namespace Camunda.ExternalTask.Client.Worker
+﻿namespace Camunda.ExternalTask.Client.Adapter
 {
     [System.AttributeUsage(System.AttributeTargets.Class |
                            System.AttributeTargets.Struct)

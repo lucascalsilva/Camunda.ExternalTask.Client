@@ -6,8 +6,8 @@ namespace Camunda.ExternalTask.Client
 
 		void Shutdown();
 
-		void StartWorkers();
+		void StartManagers();
 
-		void StopWorkers();
+		void StopManagers();
 	}
 }

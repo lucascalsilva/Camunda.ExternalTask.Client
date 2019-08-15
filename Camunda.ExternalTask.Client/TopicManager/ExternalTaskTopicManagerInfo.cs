@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Camunda.ExternalTask.Client.Worker;
+using Camunda.ExternalTask.Client.Adapter;
 
-namespace Camunda.ExternalTask.Client.DTO
+namespace Camunda.ExternalTask.Client.TopicManager
 {
-    public class ExternalTaskWorkerInfo
+    public class ExternalTaskTopicManagerInfo
     {
         public int Retries { get; set; }
         public long RetryTimeout { get; set; }

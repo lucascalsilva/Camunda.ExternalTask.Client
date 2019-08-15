@@ -2,7 +2,7 @@
 using Camunda.Api.Client;
 using Camunda.Api.Client.ExternalTask;
 
-namespace Camunda.ExternalTask.Client.Worker
+namespace Camunda.ExternalTask.Client.Adapter
 {
     public interface IExternalTaskAdapter
     {

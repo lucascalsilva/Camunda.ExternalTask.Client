@@ -15,6 +15,7 @@ namespace Camunda.ExternalTask.Client
 		private long pollingIntervalInMilliseconds = 50;
 		private int maxDegreeOfParallelism = 2;
 		private long lockDurationInMilliseconds = 1 * 60 * 1000;
+		private long maxTimeBetweenConnections = 8;
 
 		public static ExternalTaskClientBuilder Create()
 		{
@@ -63,6 +64,11 @@ namespace Camunda.ExternalTask.Client
 			return this;
 		}
 
+		public ExternalTaskClientBuilder MaxTimeBetweenConnections(int maxTimeBetweenConnections){
+			this.maxTimeBetweenConnections = maxTimeBetweenConnections;
+			return this;
+		}
+
 		public ExternalTaskClient Build()
 		{
 			var httpClient = new HttpClient();
@@ -74,15 +80,17 @@ namespace Camunda.ExternalTask.Client
 			}
 			CamundaClient camundaClient = CamundaClient.Create(httpClient);
 
-			return new ExternalTaskClient()
+			ExternalTaskClientConfig clientConfig = new ExternalTaskClientConfig()
 			{
 				WorkerId = workerId,
-				CamundaClient = camundaClient,
 				MaxTasks = maxTasks,
 				LockDurationInMilliseconds = lockDurationInMilliseconds,
 				MaxDegreeOfParallelism = maxDegreeOfParallelism,
-				PollingIntervalInMilliseconds = pollingIntervalInMilliseconds
+				PollingIntervalInMilliseconds = pollingIntervalInMilliseconds,
+				MaxTimeBetweenConnections = maxTimeBetweenConnections
 			};
+
+			return new ExternalTaskClient(camundaClient, clientConfig);
 		}
 
 	}

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Camunda.ExternalTask.Client.Worker
+namespace Camunda.ExternalTask.Client.TopicManager
 {
     [Serializable]
     public class UnrecoverableBusinessErrorException : Exception

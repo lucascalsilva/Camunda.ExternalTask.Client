@@ -1,10 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <!--<GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>-->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -25,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Camunda.Api.Client" Version="2.4.4" />
+    <PackageReference Include="Polly" Version="7.1.0" />
   </ItemGroup>
 
 </Project>

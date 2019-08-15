@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 using NSubstitute;
-using Camunda.ExternalTask.Client.Worker;
+using Camunda.ExternalTask.Client.Adapter;
 
 namespace Camunda.ExternalTask.Client.Tests
 {

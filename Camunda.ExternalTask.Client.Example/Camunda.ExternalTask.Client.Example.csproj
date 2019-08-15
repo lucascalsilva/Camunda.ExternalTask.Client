@@ -8,4 +8,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Camunda.ExternalTask.Client\Camunda.ExternalTask.Client.csproj" />
   </ItemGroup>
+  
 </Project>
