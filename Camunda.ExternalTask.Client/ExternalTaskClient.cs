@@ -11,13 +11,13 @@ namespace Camunda.ExternalTask.Client
 
     public class ExternalTaskClient : IExternalTaskClient
     {
-        public ExternalTaskClientConfig ClientConfig { get; set;}   
-        public CamundaClient CamundaClient { get; set; }
+        private string workerId;
+        private CamundaClient camundaClient;
         private IList<ExternalTaskTopicManager> topicManagers = new List<ExternalTaskTopicManager>();
 
-        public ExternalTaskClient(CamundaClient camundaClient, ExternalTaskClientConfig clientConfig){
-            CamundaClient = camundaClient;
-            ClientConfig = clientConfig;
+        public ExternalTaskClient(CamundaClient camundaClient, string workerId){
+            this.camundaClient = camundaClient;
+            this.workerId = workerId;
         }
 
         public void Startup()
@@ -38,7 +38,7 @@ namespace Camunda.ExternalTask.Client
             foreach (var topicManagerInfo in externalTaskTopicManagers)
             {
                 Console.WriteLine($"Register Task Manager for Topic {topicManagerInfo.TopicName}...");
-				ExternalTaskTopicManager topicManager = new ExternalTaskTopicManager(ClientConfig, CamundaClient.ExternalTasks, topicManagerInfo);
+				ExternalTaskTopicManager topicManager = new ExternalTaskTopicManager(workerId, camundaClient.ExternalTasks, topicManagerInfo);
                 topicManagers.Add(topicManager);
                 topicManager.StartManager();
             }
@@ -66,6 +66,11 @@ namespace Camunda.ExternalTask.Client
                     TopicName = externalTaskTopicAttribute.TopicName,
                     Retries = externalTaskTopicAttribute.Retries,
                     RetryTimeout = externalTaskTopicAttribute.RetryTimeout,
+                    MaxTasks = externalTaskTopicAttribute.MaxTasks,
+                    PollingIntervalInMilliseconds = externalTaskTopicAttribute.PollingIntervalInMilliseconds,
+                    MaxDegreeOfParallelism = externalTaskTopicAttribute.MaxDegreeOfParallelism,
+                    LockDurationInMilliseconds = externalTaskTopicAttribute.LockDurationInMilliseconds,
+                    MaxTimeBetweenConnections = externalTaskTopicAttribute.MaxTimeBetweenConnections,
                     VariablesToFetch = externalTaskVariableRequirements?.VariablesToFetch,
                     TaskAdapter = t.GetConstructor(Type.EmptyTypes)?.Invoke(null) as IExternalTaskAdapter
                 };
