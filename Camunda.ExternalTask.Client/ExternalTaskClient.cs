@@ -20,17 +20,18 @@ namespace Camunda.ExternalTask.Client
             this.workerId = workerId;
         }
 
-        public void Startup()
+
+        public virtual void Startup()
         {
             this.StartManagers();
         }
 
-        public void Shutdown()
+        public virtual void Shutdown()
         {
             this.StopManagers();
         }
 
-        public void StartManagers()
+        public virtual void StartManagers()
         {
             var assembly = Assembly.GetEntryAssembly();
             var externalTaskTopicManagers = RetrieveExternalTaskTopicManagerInfo(assembly);
@@ -44,7 +45,7 @@ namespace Camunda.ExternalTask.Client
             }
         }
 
-        public void StopManagers()
+        public virtual void StopManagers()
         {
             foreach (ExternalTaskTopicManager manager in topicManagers)
             {

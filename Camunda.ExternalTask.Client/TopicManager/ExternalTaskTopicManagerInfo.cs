@@ -6,6 +6,7 @@ namespace Camunda.ExternalTask.Client.TopicManager
 {
     public class ExternalTaskTopicManagerInfo
     {
+        public ExternalTaskTopicManagerInfo(){}
         public int Retries { get; set; }
         public long RetryTimeout { get; set; }
         public Type Type { get; set; }
