@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Camunda.Api.Client;
 using Camunda.Api.Client.ExternalTask;
-using Polly;
+using Camunda.ExternalTask.Client.Backoff;
+using Camunda.ExternalTask.Client.PolicyManager;
 
 namespace Camunda.ExternalTask.Client.TopicManager
 {
@@ -13,21 +13,31 @@ namespace Camunda.ExternalTask.Client.TopicManager
 	{
 		private string workerId;
 		private Timer taskQueryTimer;
-		private long baseRetryExp = 1;
-		private long timerRetrySeconds = 1;
+		private IBackoffStrategy backoffStrategy;
+		private IPolicyManager policyManager;
 		private ExternalTaskService externalTaskService;
+
 		private ExternalTaskTopicManagerInfo topicManagerInfo;
 
-		public ExternalTaskTopicManager(string workerId, ExternalTaskService externalTaskService, ExternalTaskTopicManagerInfo taskManagerInfo)
+		public ExternalTaskTopicManager(string workerId, ExternalTaskService externalTaskService,
+			ExternalTaskTopicManagerInfo taskManagerInfo) 
+			: this(workerId, externalTaskService, taskManagerInfo, new ExponentialBackoff(500, 2, 64000)) {}
+		public ExternalTaskTopicManager(string workerId, ExternalTaskService externalTaskService,
+			ExternalTaskTopicManagerInfo taskManagerInfo, IBackoffStrategy backoffStrategy) 
+			: this(workerId, externalTaskService, taskManagerInfo, backoffStrategy, new DefaultPolicyManager(backoffStrategy, taskManagerInfo.TopicName)) {}
+		public ExternalTaskTopicManager(string workerId, ExternalTaskService externalTaskService,
+			ExternalTaskTopicManagerInfo taskManagerInfo, IBackoffStrategy backoffStrategy, IPolicyManager policyManager)
 		{
 			this.workerId = workerId;
 			this.externalTaskService = externalTaskService;
 			this.topicManagerInfo = taskManagerInfo;
+			this.backoffStrategy = backoffStrategy;
+			this.policyManager = policyManager;
 		}
 		public void DoPolling()
 		{
 			// Query External Tasks
-			// Exception handling is only showing the connect back message when the long polling is finished
+			var fetchAndLockBackoff = 0L;
 			try
 			{
 				var fetchExternalTasks = new FetchExternalTasks()
@@ -41,19 +51,13 @@ namespace Camunda.ExternalTask.Client.TopicManager
 					}
 				};
 				var tasks = new List<LockedExternalTask>();
-				getStandardPolicy("Fetch and Lock").Execute(() => { 
+				policyManager.fetchAndLockPolicy().Execute(() =>
+				{
 					tasks = externalTaskService.FetchAndLock(fetchExternalTasks).Result;
 				});
-
-				if(tasks.Count == 0 && timerRetrySeconds < topicManagerInfo.MaxTimeBetweenConnections){
-					timerRetrySeconds = Convert.ToInt64(Math.Pow(2, baseRetryExp));
-					baseRetryExp += 1;
-				}
-				else if(tasks.Count > 0) {
-					baseRetryExp = 1;
-					timerRetrySeconds = 1;
-				}
-				Console.WriteLine($"Fetch and locked {tasks.Count} tasks in topic {topicManagerInfo.TopicName}. Will try again in {timerRetrySeconds} seconds");
+				backoffStrategy.Reconfigure(tasks.Count);
+				fetchAndLockBackoff = backoffStrategy.Calculate();
+				Console.WriteLine($"Fetch and locked {tasks.Count} tasks in topic {topicManagerInfo.TopicName}. Will try again in {TimeSpan.FromMilliseconds(fetchAndLockBackoff)} seconds");
 
 				// run them in parallel with a max degree of parallelism
 				Parallel.ForEach(
@@ -70,24 +74,25 @@ namespace Camunda.ExternalTask.Client.TopicManager
 				// schedule next run (if not stopped in between)
 				if (taskQueryTimer != null)
 				{
-					taskQueryTimer.Change(TimeSpan.FromMilliseconds(timerRetrySeconds*1000), TimeSpan.FromMilliseconds(Timeout.Infinite));
+					taskQueryTimer.Change(TimeSpan.FromMilliseconds(fetchAndLockBackoff), TimeSpan.FromMilliseconds(Timeout.Infinite));
 				}
 			}
 		}
-		public virtual void Execute(LockedExternalTask lockedExternalTask)
+		public void Execute(LockedExternalTask lockedExternalTask)
 		{
 			var resultVariables = new Dictionary<string, VariableValue>();
 
 			Console.WriteLine($"Executing External Task {lockedExternalTask.Id} from topic {topicManagerInfo.TopicName}");
 			try
 			{
-				topicManagerInfo.TaskAdapter.Execute(lockedExternalTask, ref resultVariables);				
+				topicManagerInfo.TaskAdapter.Execute(lockedExternalTask, ref resultVariables);
 				var completeExternalTask = new CompleteExternalTask()
 				{
 					WorkerId = workerId,
 					Variables = resultVariables
 				};
-				getStandardPolicy("Complete").Execute(() => {
+				policyManager.completePolicy().Execute(() =>
+				{
 					externalTaskService[lockedExternalTask.Id].Complete(completeExternalTask).Wait();
 					Console.WriteLine($"Finished External Task {lockedExternalTask.Id} from topic {topicManagerInfo.TopicName}...");
 				});
@@ -101,12 +106,12 @@ namespace Camunda.ExternalTask.Client.TopicManager
 					ErrorCode = ex.BusinessErrorCode,
 					ErrorMessage = ex.Message
 				};
-				getStandardPolicy("Handle BPMN Error").Execute(() => externalTaskService[lockedExternalTask.Id].HandleBpmnError(externalTaskBpmnError).Wait());
+				policyManager.handleBpmnErrorPolicy().Execute(() => externalTaskService[lockedExternalTask.Id].HandleBpmnError(externalTaskBpmnError).Wait());
 			}
 			catch (UnlockTaskException ex)
 			{
 				Console.WriteLine($"Unlock requested for External Task  {lockedExternalTask.Id} in topic {topicManagerInfo.TopicName}...");
-				getStandardPolicy("Unlock Task").Execute( () => externalTaskService[lockedExternalTask.Id].Unlock().Wait());
+				policyManager.unlockPolicy().Execute(() => externalTaskService[lockedExternalTask.Id].Unlock().Wait());
 			}
 			catch (Exception ex)
 			{
@@ -123,13 +128,13 @@ namespace Camunda.ExternalTask.Client.TopicManager
 					ErrorMessage = ex.Message,
 					ErrorDetails = ex.StackTrace
 				};
-				getStandardPolicy("Handle Failure").Execute(() => externalTaskService[lockedExternalTask.Id].HandleFailure(externalTaskFailure).Wait());
+				policyManager.handleFailurePolicy().Execute(() => externalTaskService[lockedExternalTask.Id].HandleFailure(externalTaskFailure).Wait());
 			}
 		}
 		public void StartManager()
 		{
 			Console.WriteLine($"Starting manager for topic {topicManagerInfo.TopicName}...");
-			this.taskQueryTimer = new Timer(_ => DoPolling(), null, timerRetrySeconds*1000, Timeout.Infinite);
+			this.taskQueryTimer = new Timer(_ => DoPolling(), null, 0, Timeout.Infinite);
 		}
 		public void StopManager()
 		{
@@ -143,27 +148,6 @@ namespace Camunda.ExternalTask.Client.TopicManager
 			{
 				this.taskQueryTimer.Dispose();
 			}
-		}
-
-		private Policy getStandardPolicy(string operation)
-		{
-			return Policy.HandleInner<HttpRequestException>()
-				.WaitAndRetryForever(retryAttempt =>
-				{
-					var maxConnectionTimeout =  TimeSpan.FromSeconds(topicManagerInfo.MaxTimeBetweenConnections);
-					var nextRetryAttempt = TimeSpan.FromSeconds(Math.Pow(2, retryAttempt));
-					if(nextRetryAttempt > maxConnectionTimeout){
-						return maxConnectionTimeout;
-					}
-					else{
-						return nextRetryAttempt;
-					}
-				},
-				(ex, span) =>
-				{
-					Console.WriteLine($"Failed to {operation} in topic {topicManagerInfo.TopicName} with error {ex.GetType().ToString()}. Will try again in {span.Seconds} seconds...");
-				}
-			);
 		}
 	}
 }

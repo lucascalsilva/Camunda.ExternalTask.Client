@@ -17,21 +17,18 @@ namespace Camunda.ExternalTask.Client.Tests
             //mock dependencies
 			var externalTaskService = Substitute.For<ExternalTaskService>();
 
-            var clientConfig = new ExternalTaskClientConfig();
-            clientConfig.WorkerId = "DemoWorker";
-            clientConfig.LockDurationInMilliseconds = 1000;
-            clientConfig.MaxDegreeOfParallelism = 1;
-
-            var managerInfo = new ExternalTaskTopicManagerInfo();
+            var managerInfo = new ExternalTaskTopicManagerInfo(){
+                LockDurationInMilliseconds = 1000,
+                MaxDegreeOfParallelism = 1
+            };
             managerInfo.TopicName = "TestTopic";
             List<String> variablesToFetch = new List<String>();
             variablesToFetch.Add("Var1");
             managerInfo.VariablesToFetch = variablesToFetch;
 
-            
 
             //set up the ExternalTaskWorker under test
-            var worker = Substitute.ForPartsOf<ExternalTaskTopicManager>(clientConfig, externalTaskService, managerInfo);
+            var worker = Substitute.ForPartsOf<ExternalTaskTopicManager>("DemoWorker", externalTaskService, managerInfo);
 
 
             //set up the ExternalTaskService

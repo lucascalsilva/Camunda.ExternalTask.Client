@@ -1,5 +1,8 @@
 # Idea files
-.vscode/
+.vscode/*
+Camunda.ExternalTask.Client/.vscode/*
+Camunda.ExternalTask.Client.Example/.vscode/*
+Camunda.ExternalTask.Client.Tests/.vscode/*
 
 # Build results
 [Bb]in/

@@ -7,10 +7,10 @@ namespace Camunda.ExternalTask.Client
 {
 	public class ExternalTaskClientBuilder
 	{
+		private string workerId = Guid.NewGuid().ToString();
 		private string baseUrl = "http://localhost:8080/engine-rest";
 		private string username;
 		private string password;
-		private string workerId = Guid.NewGuid().ToString();
 
 		public static ExternalTaskClientBuilder Create()
 		{

@@ -1,18 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Camunda.ExternalTask.Client.Adapter
 {
-    [System.AttributeUsage(System.AttributeTargets.Class |
-                           System.AttributeTargets.Struct)
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)
     ]
-    public sealed class ExternalTaskVariableRequirementsAttribute : System.Attribute
+    public sealed class ExternalTaskVariableRequirementsAttribute : Attribute
     {
         public List<string> VariablesToFetch { get; }
 
-        public ExternalTaskVariableRequirementsAttribute()
-        {
-            VariablesToFetch = new List<string>();
-        }
+        public ExternalTaskVariableRequirementsAttribute(){}
 
         public ExternalTaskVariableRequirementsAttribute(params string[] variablesToFetch)
         {
